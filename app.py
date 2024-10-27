@@ -73,16 +73,12 @@ def oauth2callback():
     # Save the credentials securely
     session['credentials'] = credentials_info
 
-    return jsonify({"message": "Google OAuth completed", "credentials": credentials_info})
+    # Call process_emails and redirect to result
+    process_result = process_emails(credentials_info)
+    return redirect(url_for('result', message=process_result['message'], error=process_result.get('error', '')))
 
-# Route to parse emails
-@app.route('/process-emails', methods=['POST'])
-def process_emails():
-    credentials_info = session.get('credentials')
-    
-    if not credentials_info:
-        return jsonify({"error": "User not authenticated"}), 401
-
+# Route to process emails
+def process_emails(credentials_info):
     # Create Credentials object from stored information
     credentials = Credentials(
         token=credentials_info['token'],
@@ -101,7 +97,7 @@ def process_emails():
         messages = results.get('messages', [])
 
         if not messages:
-            return jsonify({"message": "No messages found."})
+            return {"message": "No messages found."}
 
         # Parse messages and reply to them
         for message in messages:
@@ -113,10 +109,35 @@ def process_emails():
             # Example logic to reply to an email
             reply_to_email(service, msg, response_message)
 
-        return jsonify({"message": "Processed emails successfully."})
+        return {"message": "Processed emails successfully."}
 
     except Exception as error:
-        return jsonify({"error": f"An error occurred: {error}"}), 500
+        return {"error": f"An error occurred: {error}"}
+
+# Route to display result after processing
+@app.route('/result')
+def result():
+    message = request.args.get('message', 'No message provided.')
+    error = request.args.get('error', None)
+
+    return render_template_string('''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Result</title>
+        </head>
+        <body>
+            <h1>Result</h1>
+            <p>{{ message }}</p>
+            {% if error %}
+                <p style="color: red;">Error: {{ error }}</p>
+            {% endif %}
+            <button onclick="window.location.href='/'">Back to Home</button>
+        </body>
+        </html>
+    ''', message=message, error=error)
 
 def classify_email(email_content):
     """Classify the email content using OpenAI API."""
