@@ -10,6 +10,7 @@ import os
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Required for Flask sessions
 load_dotenv()
+sender_email = None
 # Set your client secrets file path and required Gmail scopes
 CLIENT_SECRETS_FILE = "client_secret_google.json"
 SCOPES = [
@@ -185,7 +186,6 @@ def reply_to_email(service, msg, response_message):
     thread_id = msg['threadId']
     
     # Extract the sender's email address
-    sender_email = None
     for header in msg['payload']['headers']:
         if header['name'] == 'From':
             sender_email = header['value']
