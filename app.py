@@ -22,7 +22,7 @@ SCOPES = [
 
 
 # Initialize OpenAI API key
-openai.api_key = "your_openai_api_key"  # Replace with your actual OpenAI API key
+openai.api_key = "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"  # Replace with your actual OpenAI API key
 redirectURL = 'https://automatedemailresponderflask.onrender.com/oauth2callback'
 
 # Home route with login button
