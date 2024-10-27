@@ -184,14 +184,30 @@ def reply_to_email(service, msg, response_message):
     """Function to reply to an email."""
     thread_id = msg['threadId']
     
+    # Extract the sender's email address
+    sender_email = None
+    for header in msg['payload']['headers']:
+        if header['name'] == 'From':
+            sender_email = header['value']
+            break
+
+    if not sender_email:
+        print("Sender email address not found.")
+        return  # Exit if sender email is not found
+
     # Create a message to send
     message_body = {
         'raw': encode_message(response_message),  # Encode the message content
-        'threadId': thread_id
+        'threadId': thread_id,
+        'headers': [
+            {'name': 'To', 'value': sender_email},  # Add the recipient address here
+            {'name': 'Subject', 'value': f'Re: {msg["snippet"]}'}  # Optional: Set the subject
+        ]
     }
     
     # Uncomment to send the email
     service.users().messages().send(userId='me', body=message_body).execute()
+
 
 def encode_message(message):
     """Encode the message in base64url format."""
