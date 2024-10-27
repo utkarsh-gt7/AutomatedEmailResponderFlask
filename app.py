@@ -4,11 +4,12 @@ from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import openai  # Import OpenAI for email classification
+from dotenv import load_dotenv
 import os
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Required for Flask sessions
-
+load_dotenv()
 # Set your client secrets file path and required Gmail scopes
 CLIENT_SECRETS_FILE = "client_secret_google.json"
 SCOPES = [
@@ -22,7 +23,7 @@ SCOPES = [
 
 
 # Initialize OpenAI API key
-openai.api_key = "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"  # Replace with your actual OpenAI API key
+openai.api_key = os.getenv("OPENAIKEY")
 redirectURL = 'https://automatedemailresponderflask.onrender.com/oauth2callback'
 
 # Home route with login button
