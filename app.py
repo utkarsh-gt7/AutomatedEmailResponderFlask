@@ -20,10 +20,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.send"
 ]
 
-
-
 # Initialize OpenAI API key
-openai.api_key = os.getenv("OPENAIKEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")  # Ensure the key is retrieved correctly
 redirectURL = 'https://automatedemailresponderflask.onrender.com/oauth2callback'
 
 # Home route with login button
@@ -156,12 +154,13 @@ def result():
 
 def classify_email(email_content):
     """Classify the email content using OpenAI API."""
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information.",
-        max_tokens=50
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # Use the latest model
+        messages=[
+            {"role": "user", "content": f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information."}
+        ]
     )
-    label = response.choices[0].text.strip()
+    label = response['choices'][0]['message']['content'].strip()
     return label
 
 def generate_response(label):
