@@ -83,7 +83,13 @@ def oauth2callback():
 
     # Call process_emails and redirect to result
     process_result = process_emails(credentials_info)
-    return redirect(url_for('result', message=process_result['message'], error=process_result.get('error', '')))
+    
+    # Safely access message and error
+    message = process_result.get('message', 'No message returned.')
+    error = process_result.get('error', '')
+
+    return redirect(url_for('result', message=message, error=error))
+
 
 # Route to process emails
 def process_emails(credentials_info):
