@@ -209,14 +209,18 @@ def reply_to_email(service, msg, response_message):
     service.users().messages().send(userId='me', body=message_body).execute()
 
 
-def encode_message(message):
+def encode_message(response_message):
     """Encode the message in base64url format."""
     import base64
     from email.mime.text import MIMEText
 
-    message = MIMEText(message)
+    # Create the email message with headers
+    message = MIMEText(response_message)
+    message['To'] = sender_email  # Make sure to add the 'To' field in the message itself
+    message['Subject'] = "Your Subject Here"  # Add your desired subject here
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
     return raw
+
 
 if __name__ == '__main__':
     app.run()
