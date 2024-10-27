@@ -206,7 +206,7 @@ def reply_to_email(service, msg, response_message):
     }
     
     # Uncomment to send the email
-    service.users().messages().send(userId='singhwebworks@gmail.com', body=message_body).execute()
+    service.users().messages().send(userId='me', body=message_body).execute()
 
 
 def encode_message(response_message):
