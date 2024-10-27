@@ -191,7 +191,7 @@ def reply_to_email(service, msg, response_message):
     }
     
     # Uncomment to send the email
-    # service.users().messages().send(userId='me', body=message_body).execute()
+    service.users().messages().send(userId='me', body=message_body).execute()
 
 def encode_message(message):
     """Encode the message in base64url format."""
