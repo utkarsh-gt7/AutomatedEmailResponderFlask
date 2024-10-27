@@ -13,8 +13,12 @@ app.secret_key = os.urandom(24)  # Required for Flask sessions
 CLIENT_SECRETS_FILE = "client_secret_google.json"
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "openid",
     "https://www.googleapis.com/auth/gmail.send"
 ]
+
 
 
 # Initialize OpenAI API key
