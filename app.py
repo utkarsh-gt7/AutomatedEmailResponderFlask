@@ -1,5 +1,5 @@
 # Import required libraries
-from flask import Flask, jsonify, request, redirect, session, url_for
+from flask import Flask, jsonify, request, redirect, session, url_for, render_template_string
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -15,7 +15,25 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googlea
 
 # Initialize OpenAI API key
 openai.api_key = "your_openai_api_key"  # Replace with your actual OpenAI API key
-redirectURL = 'https://empty-bushes-lie.loca.lt/oauth2callback'
+redirectURL = 'https://automatedemailresponderflask.onrender.com/oauth2callback'
+
+# Home route with login button
+@app.route('/')
+def home():
+    return render_template_string('''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Home</title>
+        </head>
+        <body>
+            <h1>Welcome to the Automated Email Responder</h1>
+            <button onclick="window.location.href='/google_login'">Login with Google</button>
+        </body>
+        </html>
+    ''')
 
 # Initialize OAuth flow
 @app.route('/google_login')
@@ -27,8 +45,6 @@ def google_login():
         include_granted_scopes='true'
     )
     session['state'] = state
-    print(authorization_url)
-
     return redirect(authorization_url)
 
 # Handle OAuth2 callback
@@ -43,7 +59,6 @@ def oauth2callback():
     authorization_response = request.url
     flow.fetch_token(authorization_response=authorization_response)
     credentials = flow.credentials
-
 
     # Convert credentials to a dictionary and return it
     credentials_info = {
@@ -146,6 +161,5 @@ def encode_message(message):
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
     return raw
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)  # Use the appropriate port if it's not 5000
-
+if __name__ == '__main__':
+    app.run(debug=True)
