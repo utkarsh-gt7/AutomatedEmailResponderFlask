@@ -146,5 +146,6 @@ def encode_message(message):
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
     return raw
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)  # Use the appropriate port if it's not 5000
+
