@@ -91,6 +91,7 @@ def oauth2callback():
 
 
 # Route to process emails
+# Route to process emails
 def process_emails(credentials_info):
     # Create Credentials object from stored information
     credentials = Credentials(
@@ -105,8 +106,8 @@ def process_emails(credentials_info):
     service = build('gmail', 'v1', credentials=credentials)
 
     try:
-        # Get the user's email messages
-        results = service.users().messages().list(userId='me', maxResults=10).execute()
+        # Get the user's email messages, limiting to the latest 2
+        results = service.users().messages().list(userId='me', maxResults=2).execute()
         messages = results.get('messages', [])
 
         if not messages:
@@ -126,6 +127,7 @@ def process_emails(credentials_info):
 
     except Exception as error:
         return {"error": f"An error occurred: {error}"}
+
 
 # Route to display result after processing
 @app.route('/result')
