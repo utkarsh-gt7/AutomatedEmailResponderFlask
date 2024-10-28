@@ -121,12 +121,14 @@ def result():
 
 def classify_email(email_content):
     try:
-        response = openai.ChatCompletion.create(
+        # Use the new OpenAI API syntax
+        openai_client = openai.OpenAI()  # Initialize OpenAI client
+
+        response = openai_client.chat.completions.create(
             model="gpt-4-turbo",
-            messages=[{"role": "user", "content": f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information."}],
-            max_tokens=50
+            messages=[{"role": "user", "content": f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information."}]
         )
-        label = response.choices[0].message['content'].strip()
+        label = response['choices'][0]['message']['content'].strip()  # Extract label from response
         return label
     except Exception as e:
         print(f"Error classifying email: {e}")
