@@ -29,9 +29,22 @@ redirectURL = 'https://automatedemailresponderflask.onrender.com/oauth2callback'
 def home():
     return render_template_string('''
         <html>
-        <body>
-            <h1>Welcome to the Automated Email Responder</h1>
-            <button onclick="window.location.href='/google_login'">Login with Google</button>
+        <head>
+            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+            <style>
+                body {
+                    background-color: #f8f9fa;
+                }
+                h1 {
+                    color: #007bff;
+                }
+            </style>
+        </head>
+        <body class="text-center">
+            <div class="container">
+                <h1>Welcome to the Automated Email Responder</h1>
+                <button class="btn btn-primary" onclick="window.location.href='/google_login'">Login with Google</button>
+            </div>
         </body>
         </html>
     ''')
@@ -108,13 +121,29 @@ def result():
     error = request.args.get('error', None)
     return render_template_string('''
         <html>
-        <body>
-            <h1>Result</h1>
-            <p>{{ message }}</p>
-            {% if error %}
-                <p style="color: red;">Error: {{ error }}</p>
-            {% endif %}
-            <button onclick="window.location.href='/'">Back to Home</button>
+        <head>
+            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+            <style>
+                body {
+                    background-color: #f8f9fa;
+                }
+                h1 {
+                    color: #28a745;
+                }
+                .error {
+                    color: red;
+                }
+            </style>
+        </head>
+        <body class="text-center">
+            <div class="container">
+                <h1>Result</h1>
+                <p>{{ message }}</p>
+                {% if error %}
+                    <p class="error">Error: {{ error }}</p>
+                {% endif %}
+                <button class="btn btn-secondary" onclick="window.location.href='/'">Back to Home</button>
+            </div>
         </body>
         </html>
     ''', message=message, error=error)
