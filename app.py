@@ -124,6 +124,8 @@ def classify_email(email_content):
         model = genai.GenerativeModel("gemini-1.5-flash-8b")
         response = model.generate_content(f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information.")
         label = response.text.strip()
+        print(email_content)
+        print(label)
         return label
     except Exception as e:
         print(f"Error classifying email: {e}")
