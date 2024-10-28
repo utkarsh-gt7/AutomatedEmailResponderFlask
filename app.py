@@ -1,4 +1,3 @@
-# Import required libraries
 from flask import Flask, jsonify, request, redirect, session, url_for, render_template_string
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
@@ -29,22 +28,9 @@ redirectURL = 'https://automatedemailresponderflask.onrender.com/oauth2callback'
 def home():
     return render_template_string('''
         <html>
-        <head>
-            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-            <style>
-                body {
-                    background-color: #f8f9fa;
-                }
-                h1 {
-                    color: #007bff;
-                }
-            </style>
-        </head>
-        <body class="text-center">
-            <div class="container">
-                <h1>Welcome to the Automated Email Responder</h1>
-                <button class="btn btn-primary" onclick="window.location.href='/google_login'">Login with Google</button>
-            </div>
+        <body>
+            <h1>Welcome to the Automated Email Responder</h1>
+            <button onclick="window.location.href='/google_login'">Login with Google</button>
         </body>
         </html>
     ''')
@@ -121,29 +107,13 @@ def result():
     error = request.args.get('error', None)
     return render_template_string('''
         <html>
-        <head>
-            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-            <style>
-                body {
-                    background-color: #f8f9fa;
-                }
-                h1 {
-                    color: #28a745;
-                }
-                .error {
-                    color: red;
-                }
-            </style>
-        </head>
-        <body class="text-center">
-            <div class="container">
-                <h1>Result</h1>
-                <p>{{ message }}</p>
-                {% if error %}
-                    <p class="error">Error: {{ error }}</p>
-                {% endif %}
-                <button class="btn btn-secondary" onclick="window.location.href='/'">Back to Home</button>
-            </div>
+        <body>
+            <h1>Result</h1>
+            <p>{{ message }}</p>
+            {% if error %}
+                <p style="color: red;">Error: {{ error }}</p>
+            {% endif %}
+            <button onclick="window.location.href='/'">Back to Home</button>
         </body>
         </html>
     ''', message=message, error=error)
@@ -193,4 +163,4 @@ def reply_to_email(service, msg, response_message):
     service.users().messages().send(userId='me', body=message_body).execute()
 
 if __name__ == '__main__':
-    app.run()
+    app.run() 
