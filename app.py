@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request, redirect, session, url_for, render_te
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-import openai  # Import OpenAI for email classification
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 import base64
@@ -22,7 +22,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.send"
 ]
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 redirectURL = 'https://automatedemailresponderflask.onrender.com/oauth2callback'
 
 @app.route('/')
@@ -121,14 +121,9 @@ def result():
 
 def classify_email(email_content):
     try:
-        # Use the new OpenAI API syntax
-        openai_client = openai.OpenAI()  # Initialize OpenAI client
-
-        response = openai_client.chat.completions.create(
-            model="gpt-4-turbo",
-            messages=[{"role": "user", "content": f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information."}]
-        )
-        label = response['choices'][0]['message']['content'].strip()  # Extract label from response
+        model = genai.GenerativeModel("gemini-1.5-flash-8b")
+        response = model.generate_content(f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information.")
+        label = response.text.strip()
         return label
     except Exception as e:
         print(f"Error classifying email: {e}")
