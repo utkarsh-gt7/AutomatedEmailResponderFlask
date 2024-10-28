@@ -6,12 +6,13 @@ from googleapiclient.discovery import build
 import openai  # Import OpenAI for email classification
 from dotenv import load_dotenv
 import os
+import base64
+from email.mime.text import MIMEText
+from googleapiclient.errors import HttpError
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Required for Flask sessions
 load_dotenv()
-sender_email = None
-# Set your client secrets file path and required Gmail scopes
 CLIENT_SECRETS_FILE = "client_secret_google.json"
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -21,21 +22,13 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.send"
 ]
 
-# Initialize OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Ensure the key is retrieved correctly
+openai.api_key = os.getenv("OPENAI_API_KEY")
 redirectURL = 'https://automatedemailresponderflask.onrender.com/oauth2callback'
 
-# Home route with login button
 @app.route('/')
 def home():
     return render_template_string('''
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Home</title>
-        </head>
+        <html>
         <body>
             <h1>Welcome to the Automated Email Responder</h1>
             <button onclick="window.location.href='/google_login'">Login with Google</button>
@@ -43,32 +36,25 @@ def home():
         </html>
     ''')
 
-# Initialize OAuth flow
 @app.route('/google_login')
 def google_login():
     flow = Flow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
     flow.redirect_uri = redirectURL
     authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true'
+        access_type='offline', include_granted_scopes='true'
     )
     session['state'] = state
     return redirect(authorization_url)
 
-# Handle OAuth2 callback
 @app.route('/oauth2callback')
 def oauth2callback():
-    print("OAuth callback received")
     state = session['state']
     flow = Flow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES, state=state)
     flow.redirect_uri = redirectURL
-
-    # Exchange the authorization code for credentials
     authorization_response = request.url
     flow.fetch_token(authorization_response=authorization_response)
     credentials = flow.credentials
 
-    # Convert credentials to a dictionary and return it
     credentials_info = {
         'token': credentials.token,
         'refresh_token': credentials.refresh_token,
@@ -78,23 +64,15 @@ def oauth2callback():
         'scopes': credentials.scopes
     }
 
-    # Save the credentials securely
     session['credentials'] = credentials_info
-
-    # Call process_emails and redirect to result
     process_result = process_emails(credentials_info)
     
-    # Safely access message and error
     message = process_result.get('message', 'No message returned.')
     error = process_result.get('error', '')
 
     return redirect(url_for('result', message=message, error=error))
 
-
-# Route to process emails
-# Route to process emails
 def process_emails(credentials_info):
-    # Create Credentials object from stored information
     credentials = Credentials(
         token=credentials_info['token'],
         refresh_token=credentials_info['refresh_token'],
@@ -102,48 +80,34 @@ def process_emails(credentials_info):
         client_id=credentials_info['client_id'],
         client_secret=credentials_info['client_secret']
     )
-
-    # Build the Gmail API service
     service = build('gmail', 'v1', credentials=credentials)
 
     try:
-        # Get the user's email messages, limiting to the latest 2
         results = service.users().messages().list(userId='me', maxResults=2).execute()
         messages = results.get('messages', [])
 
         if not messages:
             return {"message": "No messages found."}
 
-        # Parse messages and reply to them
         for message in messages:
             msg = service.users().messages().get(userId='me', id=message['id']).execute()
-            email_content = msg['snippet']  # Use snippet or actual email body as needed
-            label = classify_email(email_content)  # Classify the email
-            response_message = generate_response(label)  # Generate response based on label
+            email_content = msg['snippet']
+            label = classify_email(email_content)
+            response_message = generate_response(label)
             
-            # Example logic to reply to an email
             reply_to_email(service, msg, response_message)
 
         return {"message": "Processed emails successfully."}
 
-    except Exception as error:
+    except HttpError as error:
         return {"error": f"An error occurred: {error}"}
 
-
-# Route to display result after processing
 @app.route('/result')
 def result():
     message = request.args.get('message', 'No message provided.')
     error = request.args.get('error', None)
-
     return render_template_string('''
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Result</title>
-        </head>
+        <html>
         <body>
             <h1>Result</h1>
             <p>{{ message }}</p>
@@ -156,7 +120,6 @@ def result():
     ''', message=message, error=error)
 
 def classify_email(email_content):
-    """Classify the email content using OpenAI API."""
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -167,11 +130,9 @@ def classify_email(email_content):
         return label
     except Exception as e:
         print(f"Error classifying email: {e}")
-        return "Unknown"  # Return a default label or handle accordingly
-
+        return "Unknown"
 
 def generate_response(label):
-    """Generate a response based on the email classification."""
     if label == "Interested":
         return "Thank you for your interest! Would you like to schedule a demo?"
     elif label == "Not Interested":
@@ -182,10 +143,8 @@ def generate_response(label):
         return "Thank you for your email!"
 
 def reply_to_email(service, msg, response_message):
-    """Function to reply to an email."""
     thread_id = msg['threadId']
-    
-    # Extract the sender's email address
+    sender_email = None
     for header in msg['payload']['headers']:
         if header['name'] == 'From':
             sender_email = header['value']
@@ -193,34 +152,19 @@ def reply_to_email(service, msg, response_message):
 
     if not sender_email:
         print("Sender email address not found.")
-        return  # Exit if sender email is not found
+        return
 
-    # Create a message to send
+    message = MIMEText(response_message)
+    message['To'] = sender_email
+    message['Subject'] = f"Re: {msg['snippet']}"
+    encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
     message_body = {
-        'raw': encode_message(response_message),  # Encode the message content
-        'threadId': thread_id,
-        'headers': [
-            {'name': 'To', 'value': sender_email},  # Add the recipient address here
-            {'name': 'Subject', 'value': f'Re: {msg["snippet"]}'}  # Optional: Set the subject
-        ]
+        'raw': encoded_message,
+        'threadId': thread_id
     }
     
-    # Uncomment to send the email
     service.users().messages().send(userId='me', body=message_body).execute()
-
-
-def encode_message(response_message):
-    """Encode the message in base64url format."""
-    import base64
-    from email.mime.text import MIMEText
-
-    # Create the email message with headers
-    message = MIMEText(response_message)
-    message['To'] = sender_email  # Make sure to add the 'To' field in the message itself
-    message['Subject'] = "Your Subject Here"  # Add your desired subject here
-    raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
-    return raw
-
 
 if __name__ == '__main__':
     app.run()
