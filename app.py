@@ -122,7 +122,7 @@ def result():
 def classify_email(email_content):
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-turbo",
             messages=[{"role": "user", "content": f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information."}],
             max_tokens=50
         )
