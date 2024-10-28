@@ -124,8 +124,6 @@ def classify_email(email_content):
         model = genai.GenerativeModel("gemini-1.5-flash-8b")
         response = model.generate_content(f"Classify this email content: {email_content}. Labels: Interested, Not Interested, More Information.")
         label = response.text.strip()
-        print(email_content)
-        print(label)
         return label
     except Exception as e:
         print(f"Error classifying email: {e}")
@@ -155,7 +153,7 @@ def reply_to_email(service, msg, response_message):
 
     message = MIMEText(response_message)
     message['To'] = sender_email
-    message['Subject'] = f"Re: {msg['snippet']}"
+    message['Subject'] = f"Greetings! Here's a follow up..."
     encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
     message_body = {
